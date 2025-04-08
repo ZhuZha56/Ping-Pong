@@ -10,7 +10,7 @@ window = display.set_mode((700, 500))
 display.set_caption('Пинг Понг')
 
 # Шрифты
-font = font.SysFont(None, 36)
+font = font.SysFont(None, 52)
 
 # Фон
 background = transform.scale(image.load("Ping.png"), (700, 500))
@@ -19,6 +19,8 @@ background = transform.scale(image.load("Ping.png"), (700, 500))
 missed_ufos = 0
 destroyed_ufos = 0
 game_result = None  # None, "win", "lose"
+score1 = 0
+score2 = 0
 
 
 class GameSprite(sprite.Sprite):
@@ -54,7 +56,7 @@ class Player(GameSprite):
 
 class Ball(GameSprite):
     def __init__(self, image_path, x, y, speed_x, speed_y):
-        super().__init__(image_path, x, y, speed=0, size=(100, 80))  # Скорость не используется в GameSprite
+        super().__init__(image_path, x, y, speed=0,size=(100, 80))  # Скорость не используется в GameSprite
         self.speed_x = speed_x
         self.speed_y = speed_y
 
@@ -67,13 +69,30 @@ class Ball(GameSprite):
         if self.rect.top <= 0 or self.rect.bottom >= 500:  # Верхняя и нижняя границы окна
             self.speed_y *= -1  # Изменяем направление по Y
 
+        # Проверка выхода за границы экрана по X (для подсчета очков)
+        if self.rect.left <= 0:  # Если мяч выходит за левую границу (игрок 2 забивает)
+            global score2
+            score2 += 1
+            self.reset_position()  # Сброс позиции мяча
+
+        if self.rect.right >= 700:  # Если мяч выходит за правую границу (игрок 1 забивает)
+            global score1
+            score1 += 1
+            self.reset_position()  # Сброс позиции мяча
+
+    def reset_position(self):
+        # Сбрасываем позицию мяча в центр экрана и задаем случайную скорость
+        self.rect.center = (350, 250)
+        self.speed_x = random.choice([-5, 5])
+        self.speed_y = random.choice([-5, 5])
+
     def reset(self):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
 
 player1 = Player("Redrocket.png", 30, 250, 5)
 player2 = Player("Bluerocket.png", 670, 250, 5)
-ball = Ball("Ball.png", 350, 250, random.choice([-5, 5]), random.choice([-5, 5]))  # Начальная скорость мяча
+ball = Ball("Ball.png", 350, 250, random.choice([-5, 5]), random.choice([-5, 5]))
 
 clock = time.Clock()
 running = True
@@ -87,15 +106,22 @@ while running:
 
     player1.update1()
     player2.update2()
-    ball.update()  # Обновляем позицию мяча
+    ball.update()
 
     # Проверка на столкновение мяча с ракетками
     if sprite.collide_rect(ball, player1) or sprite.collide_rect(ball, player2):
-        ball.speed_x *= -1  # Изменяем направление по X при столкновении с ракеткой
+        ball.speed_x *= -1
 
     player1.reset()
     player2.reset()
-    ball.reset()  # Отрисовываем мяч
+    ball.reset()
+
+    # Отображение счета на экране
+    score_text = font.render(f"{score1}:{score2}", True,(255 ,255 ,255))
+    text_x = (700 - score_text.get_width()) // 2  # Центрируем по ширине окна
+    text_y = (500 - score_text.get_height()) // 2  # Центрируем по высоте окна
+    window.blit(score_text, (text_x, text_y))
+
 
     display.update()
     clock.tick(60)
@@ -107,7 +133,7 @@ while game_over:
         if e.type == QUIT:
             game_over = False
 
-    window.blit(background, (0, 0))
+    window.blit(background,(0 ,0))
 
     display.update()
     clock.tick(60)
