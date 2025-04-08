@@ -122,6 +122,9 @@ while running:
     text_y = (500 - score_text.get_height()) // 2  # Центрируем по высоте окна
     window.blit(score_text, (text_x, text_y))
 
+    if score1>=5 or score2>=5 :
+        running=False
+
 
     display.update()
     clock.tick(60)
@@ -134,6 +137,9 @@ while game_over:
             game_over = False
 
     window.blit(background,(0 ,0))
-
+    text = font.render("Игра окончена", True, (255, 255, 255))
+    text_x = (700 - text.get_width()) // 2  # Центрируем по ширине окна
+    text_y = (500 - text.get_height()) // 2  # Центрируем по высоте окна
+    window.blit(text, (text_x, text_y))
     display.update()
     clock.tick(60)
