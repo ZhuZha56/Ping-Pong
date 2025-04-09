@@ -13,10 +13,10 @@ display.set_caption('Пинг Понг')
 font = font.SysFont(None, 52)
 
 # Фон
-background = transform.scale(image.load("Ping.png"), (700, 500))
+background = transform.scale(image.load("Sprites/Ping.png"), (700, 500))
 
 # Загрузка изображения кнопки "Играть"
-play_button_image = transform.scale(image.load("play_button.png"),
+play_button_image = transform.scale(image.load("Sprites/Play_button.jpg"),
                                     (200, 100))  # Замените "play_button.png" на путь к вашему изображению кнопки
 play_button_rect = play_button_image.get_rect(center=(350, 250))  # Центрируем кнопку
 
@@ -99,6 +99,7 @@ def main_menu():
     while True:
         for e in event.get():
             if e.type == QUIT:
+
                 quit()
 
             # Обработка нажатия мыши для кнопки "Играть"
@@ -107,6 +108,7 @@ def main_menu():
                 if play_button_rect.collidepoint(mouse_pos):
                     return
 
+        background = transform.scale(image.load("Sprites/main_menu.png"), (700, 500))
         window.blit(background, (0, 0))
 
         # Отображение кнопки "Играть"
@@ -115,9 +117,9 @@ def main_menu():
         display.update()
 
 
-player1 = Player("Redrocket.png", 30, 250, 5)
-player2 = Player("Bluerocket.png", 670, 250, 5)
-ball = Ball("Ball.png", 350, 250,
+player1 = Player("Sprites/Redrocket.png", 30, 250, 5)
+player2 = Player("Sprites/Bluerocket.png", 670, 250, 5)
+ball = Ball("Sprites/Ball.png", 350, 250,
             random.choice([-5, 5]), random.choice([-5, 5]))
 
 clock = time.Clock()
@@ -128,6 +130,7 @@ main_menu()
 running = True
 
 while running:
+    background = transform.scale(image.load("Sprites/Ping.png"), (700, 500))
     window.blit(background, (0, 0))
 
     for e in event.get():
@@ -167,16 +170,20 @@ while game_over:
     for e in event.get():
         if e.type == QUIT:
             game_over = False
+            running = False  # Завершаем основной игровой цикл
 
+    background = transform.scale(image.load("Sprites/main_menu.png"), (700, 500))
     window.blit(background, (0, 0))
 
     # Отображение текста "Игра окончена" в центре экрана
-    text = font.render("Игра окончена", True, (255, 255, 255))
+    text = font.render("Игра окончена", True, (0, 0, 0))
 
     text_x = (700 - text.get_width()) // 2
     text_y = (500 - text.get_height()) // 2
-
     window.blit(text, (text_x, text_y))
 
     display.update()
     clock.tick(60)
+
+# Завершение Pygame
+quit()
