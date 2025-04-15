@@ -15,15 +15,19 @@ font = font.SysFont(None, 52)
 # Фон
 background = transform.scale(image.load("Sprites/Ping.png"), (700, 500))
 
-# Загрузка изображения кнопки "Играть"
-play_button_image = transform.scale(image.load("Sprites/Play_button.jpg"),
-                                    (200, 100))  # Замените "play_button.png" на путь к вашему изображению кнопки
+play_button_image = transform.scale(image.load("Sprites/Play_button.jpg"), (230, 80))
 play_button_rect = play_button_image.get_rect(center=(350, 250))  # Центрируем кнопку
 
+BackHome_image = transform.scale(image.load("Sprites/BackHome_button.jpg"), (230, 70))
+BackHome_rect = BackHome_image.get_rect(center=(350, 350))
+
+oneVSone_button_image = transform.scale(image.load("Sprites/oneVSone_button.jpg"), (230, 70))
+oneVSone_button_rect = oneVSone_button_image.get_rect(center=(550, 250))
+
+trening_button_image = transform.scale(image.load("Sprites/trening_button.jpg"), (230, 70))
+trening_button_rect = trening_button_image.get_rect(center=(150, 250))
+
 # Глобальные переменные
-missed_ufos = 0
-destroyed_ufos = 0
-game_result = None
 score1 = 0
 score2 = 0
 
@@ -40,10 +44,6 @@ class GameSprite(sprite.Sprite):
 
 
 class Player(GameSprite):
-    def __init__(self, image_path, x, y, speed):
-        super().__init__(image_path, x, y, speed)
-        self.bullet_available = True
-
     def update1(self):
         keys = key.get_pressed()
         if keys[K_w] and self.rect.y > 0:
@@ -57,6 +57,12 @@ class Player(GameSprite):
             self.rect.y -= self.speed
         if keys[K_DOWN] and self.rect.y < 430:
             self.rect.y += self.speed
+
+    def update_trening(self):
+        if self.rect.y < random.randint(0, 400):
+            self.rect.y += self.speed
+        else:
+            self.rect.y -= self.speed
 
 
 class Ball(GameSprite):
@@ -74,7 +80,7 @@ class Ball(GameSprite):
         if self.rect.top <= 0 or self.rect.bottom >= 500:
             self.speed_y *= -1
 
-            # Проверка выхода за границы экрана по X (для подсчета очков)
+        # Проверка выхода за границы экрана по X (для подсчета очков)
         if self.rect.left <= 0:
             global score2
             score2 += 1
@@ -99,17 +105,16 @@ def main_menu():
     while True:
         for e in event.get():
             if e.type == QUIT:
-
                 quit()
 
             # Обработка нажатия мыши для кнопки "Играть"
             if e.type == MOUSEBUTTONDOWN:
                 mouse_pos = mouse.get_pos()
                 if play_button_rect.collidepoint(mouse_pos):
-                    return
+                    return show_game_mode_selection()
 
-        background = transform.scale(image.load("Sprites/main_menu.png"), (700, 500))
-        window.blit(background, (0, 0))
+        background_menu = transform.scale(image.load("Sprites/main_menu.png"), (700, 500))
+        window.blit(background_menu, (0, 0))
 
         # Отображение кнопки "Играть"
         window.blit(play_button_image, play_button_rect)
@@ -117,73 +122,127 @@ def main_menu():
         display.update()
 
 
-player1 = Player("Sprites/Redrocket.png", 30, 250, 5)
-player2 = Player("Sprites/Bluerocket.png", 670, 250, 5)
-ball = Ball("Sprites/Ball.png", 350, 250,
-            random.choice([-5, 5]), random.choice([-5, 5]))
+def show_game_mode_selection():
+    while True:
+        for e in event.get():
+            if e.type == QUIT:
+                quit()
 
-clock = time.Clock()
+            # Обработка нажатия мыши для выбора режима игры
+            if e.type == MOUSEBUTTONDOWN:
+                mouse_pos = mouse.get_pos()
+                if oneVSone_button_rect.collidepoint(mouse_pos):
+                    return start_game(mode='1vs1')
+                elif trening_button_rect.collidepoint(mouse_pos):
+                    return start_game(mode='training')
 
-# Показать главное меню перед началом игры
-main_menu()
-
-running = True
-
-while running:
-    background = transform.scale(image.load("Sprites/Ping.png"), (700, 500))
-    window.blit(background, (0, 0))
-
-    for e in event.get():
-        if e.type == QUIT:
-            running = False
-
-    player1.update1()
-    player2.update2()
-    ball.update()
-
-    # Проверка на столкновение мяча с ракетками
-    if sprite.collide_rect(ball, player1) or sprite.collide_rect(ball, player2):
-        ball.speed_x *= -1
-
-    player1.reset()
-    player2.reset()
-    ball.reset()
-
-    # Отображение счета на экране
-    score_text = font.render(f"{score1}:{score2}", True, (255, 255, 255))
-
-    text_x = (700 - score_text.get_width()) // 2
-    text_y = (500 - score_text.get_height()) // 2
-
-    window.blit(score_text, (text_x, text_y))
-
-    if score1>=5 or score2>=5 :
-        running=False
+        window.blit(background,(0 ,0))
 
 
-    display.update()
-    clock.tick(60)
+        window.blit(oneVSone_button_image , oneVSone_button_rect)
+        window.blit(trening_button_image , trening_button_rect)
 
-# Экран окончания игры
-game_over = True
-while game_over:
-    for e in event.get():
-        if e.type == QUIT:
-            game_over = False
-            running = False  # Завершаем основной игровой цикл
+        display.update()
 
-    background = transform.scale(image.load("Sprites/main_menu.png"), (700, 500))
-    window.blit(background, (0, 0))
 
-    # Отображение текста "Игра окончена" в центре экрана
-    text = font.render("Игра окончена", True, (0, 0, 0))
+def start_game(mode):
+    global score1 , score2
 
-    text_x = (700 - text.get_width()) // 2
-    text_y = (500 - text.get_height()) // 2
-    window.blit(text, (text_x, text_y))
+    player1 = Player("Sprites/Redrocket.png",30 ,250 ,5)
+    player2 = Player("Sprites/Bluerocket.png",670 ,250 ,5)
 
-    display.update()
-    clock.tick(60)
+    ball = Ball("Sprites/Ball.png",350 ,250 ,random.choice([-5 ,5]), random.choice([-5 ,5]))
+
+    clock = time.Clock()
+
+    running=True
+
+    while running:
+
+         window.blit(background,(0 ,0))
+
+         for e in event.get():
+             if e.type == QUIT:
+                 running=False
+
+         player1.update1()
+         ball.update()
+
+         if mode == '1vs1':
+             player2.update2()
+             # Проверка на столкновение мяча с ракетками
+             if sprite.collide_rect(ball ,player1) or sprite.collide_rect(ball ,player2):
+                 ball.speed_x *= -1
+
+         elif mode == 'trening':
+             player2.update_trening()
+             # Проверка на столкновение мяча с ракетками
+             if sprite.collide_rect(ball ,player1):
+                 ball.speed_x *= -1
+
+         player1.reset()
+         player2.reset()
+         ball.reset()
+
+         # Отображение счета на экране
+         score_text=font.render(f"{score1}:{score2}",True,(255 ,255 ,255))
+
+         text_x=(700 - score_text.get_width()) //2
+         text_y=(500 - score_text.get_height()) //2
+
+         window.blit(score_text,(text_x,text_y))
+
+         if score1 >=5 or score2 >=5:
+             running=False
+
+         display.update()
+         clock.tick(60)
+
+
+    game_over_screen()
+
+
+def game_over_screen():
+    while True:
+       for e in event.get():
+           if e.type == QUIT:
+               quit()
+
+           if e.type == MOUSEBUTTONDOWN:
+               mouse_pos=mouse.get_pos()
+               if BackHome_rect.collidepoint(mouse_pos):
+                   return True
+
+
+       background=transform.scale(image.load("Sprites/main_menu.png"),(700 ,500))
+
+
+       window.blit(background,(0 ,0))
+
+
+       # Отображение текста "Игра окончена" в центре экрана
+       text=font.render("Игра окончена",True,(255 ,255 ,255))
+
+
+       text_x=(700 - text.get_width()) //2
+       text_y=(400 - text.get_height()) //2
+
+
+       window.blit(text,(text_x,text_y))
+
+
+       # Отображение кнопки "Назад"
+       window.blit(BackHome_image , BackHome_rect)
+
+
+       display.update()
+
+
+while True:
+   main_menu()
+
+   score1=0
+   score2=0
 
 # Завершение Pygame
 quit()
