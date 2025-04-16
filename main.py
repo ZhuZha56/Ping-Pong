@@ -91,11 +91,37 @@ class Ball(GameSprite):
             score1 += 1
             self.reset_position()
 
+    def update_trening(self):
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+
+        # Отскок от верхней и нижней стен
+        if self.rect.top <= 0 or self.rect.bottom >= 500:
+            self.speed_y *= -1
+
+        # Отскок от правой стены
+        if self.rect.right >= 700:
+            self.speed_x *= -1
+
+        # Если мяч вышел за левую границу — игрок проиграл очко
+        if self.rect.left <= 0:
+            global score2
+            score2 += 1
+            self.reset_position()
+
     def reset_position(self):
-        # Сбрасываем позицию мяча в центр экрана и задаем случайную скорость
         self.rect.center = (350, 250)
-        self.speed_x = random.choice([-5, 5])
-        self.speed_y = random.choice([-5, 5])
+
+        # Обеспечим ненулевую скорость по X
+        self.speed_x = 0
+        while self.speed_x == 0:
+            self.speed_x = random.choice([-5, 5])
+
+        # Обеспечим ненулевую скорость по Y
+        self.speed_y = 0
+        while self.speed_y == 0:
+            self.speed_y = random.choice([-5, 5])
+        print(self.speed_x, self.speed_y)
 
     def reset(self):
         window.blit(self.image, (self.rect.x, self.rect.y))
@@ -134,7 +160,7 @@ def show_game_mode_selection():
                 if oneVSone_button_rect.collidepoint(mouse_pos):
                     return start_game(mode='1vs1')
                 elif trening_button_rect.collidepoint(mouse_pos):
-                    return start_game(mode='training')
+                    return start_game(mode='trening')
 
         window.blit(background,(0 ,0))
 
@@ -146,60 +172,60 @@ def show_game_mode_selection():
 
 
 def start_game(mode):
-    global score1 , score2
+    global score1, score2
+    print(mode)
 
-    player1 = Player("Sprites/Redrocket.png",30 ,250 ,5)
-    player2 = Player("Sprites/Bluerocket.png",670 ,250 ,5)
+    player1 = Player("Sprites/Redrocket.png", 30, 250, 5)
 
-    ball = Ball("Sprites/Ball.png",350 ,250 ,random.choice([-5 ,5]), random.choice([-5 ,5]))
+    if mode == '1vs1':
+        player2 = Player("Sprites/Bluerocket.png", 670, 250, 5)
 
+    ball = Ball("Sprites/Ball.png", 350, 250, random.choice([-5, 5]), random.choice([-5, 5]))
     clock = time.Clock()
-
-    running=True
+    running = True
 
     while running:
+        window.blit(background, (0, 0))
 
-         window.blit(background,(0 ,0))
+        for e in event.get():
+            if e.type == QUIT:
+                running = False
 
-         for e in event.get():
-             if e.type == QUIT:
-                 running=False
+        player1.update1()
 
-         player1.update1()
-         ball.update()
+        if mode == '1vs1':
+            player2.update2()
+            ball.update()
+            if sprite.collide_rect(ball, player1) or sprite.collide_rect(ball, player2):
+                ball.speed_x *= -1
 
-         if mode == '1vs1':
-             player2.update2()
-             # Проверка на столкновение мяча с ракетками
-             if sprite.collide_rect(ball ,player1) or sprite.collide_rect(ball ,player2):
-                 ball.speed_x *= -1
+        elif mode == 'trening':
 
-         elif mode == 'trening':
-             player2.update_trening()
-             # Проверка на столкновение мяча с ракетками
-             if sprite.collide_rect(ball ,player1):
-                 ball.speed_x *= -1
+            ball.update_trening()
+            if sprite.collide_rect(ball, player1):
+                ball.speed_x *= -1
 
-         player1.reset()
-         player2.reset()
-         ball.reset()
+        player1.reset()
 
-         # Отображение счета на экране
-         score_text=font.render(f"{score1}:{score2}",True,(255 ,255 ,255))
+        if mode == '1vs1':
+            player2.reset()
 
-         text_x=(700 - score_text.get_width()) //2
-         text_y=(500 - score_text.get_height()) //2
+        ball.reset()
 
-         window.blit(score_text,(text_x,text_y))
+        # Отображение счёта
+        score_text = font.render(f"{score1}:{score2}", True, (255, 255, 255))
+        text_x = (700 - score_text.get_width()) // 2
+        text_y = (500 - score_text.get_height()) // 2
+        window.blit(score_text, (text_x, text_y))
 
-         if score1 >=5 or score2 >=5:
-             running=False
+        if score1 >= 5 or score2 >= 5:
+            running = False
 
-         display.update()
-         clock.tick(60)
-
+        display.update()
+        clock.tick(60)
 
     game_over_screen()
+
 
 
 def game_over_screen():
@@ -207,6 +233,7 @@ def game_over_screen():
        for e in event.get():
            if e.type == QUIT:
                quit()
+               break
 
            if e.type == MOUSEBUTTONDOWN:
                mouse_pos=mouse.get_pos()
